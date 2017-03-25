@@ -8,46 +8,32 @@ defmodule DepChecker do
   @doc """
   """
   def grab_deps do
-    # Mix.Project.deps_paths()
-    # %{certifi: "~/Projects/depchecker/webapp/deps/certifi",
-    #   hackney: "~/Projects/depchecker/webapp/deps/hackney",
-    #   httpoison: "~/Projects/depchecker/webapp/deps/httpoison",
-    #   idna: "~/Projects/depchecker/webapp/deps/idna",
-    #   metrics: "~/Projects/depchecker/webapp/deps/metrics",
-    #   mime: "~/Projects/depchecker/webapp/deps/mime",
-    #   mimerl: "~/Projects/depchecker/webapp/deps/mimerl",
-    #   phoenix: "~/Projects/depchecker/webapp/deps/phoenix",
-    #   phoenix_pubsub: "~/Projects/depchecker/webapp/deps/phoenix_pubsub",
-    #   plug: "~/Projects/depchecker/webapp/deps/plug",
-    #   poison: "~/Projects/depchecker/webapp/deps/poison",
-    #   ssl_verify_fun: "~/Projects/depchecker/webapp/deps/ssl_verify_fun"}
-
-    # Mix.Project.config[:deps]
-    # [phoenix: "> 0.0.0", httpoison: "~> 0.10.0"]
-
-    # i want to get here:
-    # [phoenix: "> 0.0.0", httpoison: "~> 0.10.0"]
-    # %{"phoenix" => %{
-    #     upgradable: true,
-    #     installed_version: "1.2.0",
-    #     newest_version: "1.3.0",
-    #   },
-    #   "httpoison" => %{
-    #     upgradable: false,
-    #     installed_version: "0.10.0",
-    #     newest_version: "0.10.0",
-    #   },
-    # }
+    http_request()
   end
 
   # maybe use Hex.API.request(method, url, headers, body \\ nil)
   def http_request do
-    package_name = "poison"
-    url = @hex_api_endpoint <> "/packages/" <> package_name
+    package_name = "phoenix"
+    url = fn package_name -> @hex_api_endpoint <> "/packages/" <> package_name end
 
-    with %{body: body, status_code: 200} <- HTTPoison.get!(url),
-         {:ok, package} <- Poison.decode(body) do
-      IO.inspect package
+    with %{body: body, status_code: 200} <- HTTPoison.get!(url.("phoenix")),
+      {:ok, package} <- Poison.decode(body) do
+
+      case List.first(package["releases"]) do
+        nil ->
+          raise "no release for package #{package.name}"
+
+        release ->
+          DepChecker.flattened_deps
+          |> Enum.find(fn {name, _app, _version} -> name == package_name end)
+
+          %{package_name =>
+            %{installed_version: "1.2.0",
+              newest_version: release["version"],
+            },
+          }
+      end
+
     end
   end
 
