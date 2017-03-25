@@ -24,16 +24,25 @@ defmodule DepChecker do
           raise "no release for package #{package.name}"
 
         release ->
-          DepChecker.flattened_deps
+          {_name, _app, current_version} = DepChecker.flattened_deps
           |> Enum.find(fn {name, _app, _version} -> name == package_name end)
 
-          %{package_name =>
-            %{installed_version: "1.2.0",
-              newest_version: release["version"],
-            },
-          }
-      end
+          case Version.compare(release["version"], current_version) do
+            :gt ->
+              %{package_name =>
+                %{installed_version: current_version,
+                  newest_version: release["version"],
+                  upgradable: true,
+                },
+              }
 
+            :eq ->
+              :eq
+
+            :lt ->
+              :lt
+          end
+      end
     end
   end
 
