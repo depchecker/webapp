@@ -16,6 +16,7 @@ defmodule DepChecker.Mixfile do
        :cowboy,
        :plug,
      ],
+     mod: {DepChecker.Application, []}
     ]
   end
 
