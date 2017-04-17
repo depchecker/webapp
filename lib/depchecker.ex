@@ -37,7 +37,12 @@ defmodule DepChecker do
               }
 
             :eq ->
-              :eq
+              %{package_name =>
+                %{installed_version: current_version,
+                  newest_version: current_version,
+                  upgradable: false,
+                },
+              }
 
             :lt ->
               :lt

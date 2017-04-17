@@ -5,8 +5,8 @@ defmodule DepCheckerTest do
   test "it works" do
     expectation =
       %{"phoenix" => %{
-          upgradable: true,
-          installed_version: "1.2.3",
+          upgradable: false,
+          installed_version: "1.3.0-rc.1",
           newest_version: "1.3.0-rc.1",
         },
         # "httpoison" => %{
