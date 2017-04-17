@@ -52,7 +52,7 @@ defmodule DepChecker do
   """
   @spec flattened_deps() :: [{String.t, String.t, String.t}]
   def flattened_deps do
-    {lock, _} = Code.eval_file("mix.lock")
+    {lock, _} = Code.eval_file("../../demo_app/mix.lock")
     Hex.Mix.from_lock(lock)  # [{"hackney", "hackney", "1.6.6"}, ...]
   end
 end
