@@ -25,6 +25,7 @@ defmodule DepChecker.Mixfile do
      {:mix_test_watch, "> 0.0.0", only: :dev, runtime: false},
      {:cowboy, "~> 1.0.0"},
      {:plug, "~> 1.0"},
+     {:poison, "~> 3.1"},
     ]
   end
 end
