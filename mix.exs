@@ -21,8 +21,7 @@ defmodule DepChecker.Mixfile do
   end
 
   defp deps do
-    [{:phoenix, "> 0.0.0"},
-     {:httpoison, "~> 0.10.0"},
+    [{:httpoison, "~> 0.10.0"},
      {:mix_test_watch, "> 0.0.0", only: :dev, runtime: false},
      {:cowboy, "~> 1.0.0"},
      {:plug, "~> 1.0"},
