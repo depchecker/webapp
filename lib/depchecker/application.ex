@@ -1,5 +1,3 @@
-IO.puts "APPLICATION PORT #{System.get_env "PORT"}"
-
 defmodule DepChecker.Application do
   @moduledoc false
 
@@ -7,8 +5,6 @@ defmodule DepChecker.Application do
 
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
-
-    IO.puts "APPLICATION STARTING IN PORT #{System.get_env "PORT"}"
 
     port = String.to_integer System.get_env "PORT"
 
