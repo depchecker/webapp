@@ -4,9 +4,9 @@ defmodule DepChecker.RouterTest do
 
   @opts DepChecker.Router.init([])
 
-  test "returns hello world" do
+  test "calling the endpoint" do
     # Create a test connection
-    conn = conn(:get, "/hello")
+    conn = conn(:get, "/")
 
     # Invoke the plug
     conn = DepChecker.Router.call(conn, @opts)
@@ -14,6 +14,6 @@ defmodule DepChecker.RouterTest do
     # Assert the response and status
     assert conn.state == :sent
     assert conn.status == 200
-    assert conn.resp_body == "world"
+    assert conn.resp_body == "Hello world!"
   end
 end
