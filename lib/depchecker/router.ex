@@ -8,7 +8,8 @@ defmodule DepChecker.Router do
   plug :dispatch
 
   get "/" do
-    send_resp(conn, 200, "Hello world!")
+    payload = DepChecker.grab_deps() |> Msgpax.pack!()
+    send_resp(conn, 200, payload)
   end
 
   match _ do
