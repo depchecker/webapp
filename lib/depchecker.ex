@@ -7,57 +7,78 @@ defmodule DepChecker do
 
   @doc """
   """
-  def grab_deps do
-    http_request()
+  def perform do
+    package_name = "phoenix"
+    project_name = "phoenix-demo-app"
+    path_to_mix_lock = "../../#{project_name}/mix.lock"
+
+    %{body: body, status_code: 200} = http_get_package_from_hex(package_name)
+
+    {:ok, package} = Poison.decode(body)
+
+    version = current_version_in_use(package_name, path_to_mix_lock)
+
+    latest_release = package["releases"] |> List.first()
+
+    latest_release
+    |> compare_versions(version)
+    |> to_payload(package_name, latest_release, version)
   end
+
 
   # maybe use Hex.API.request(method, url, headers, body \\ nil)
-  def http_request do
-    package_name = "phoenix"
-    url = fn package_name -> @hex_api_endpoint <> "/packages/" <> package_name end
-
-    with %{body: body, status_code: 200} <- HTTPoison.get!(url.("phoenix")),
-      {:ok, package} <- Poison.decode(body) do
-
-      case List.first(package["releases"]) do
-        nil ->
-          raise "no release for package #{package.name}"
-
-        release ->
-          {_name, _app, current_version} = DepChecker.flattened_deps
-          |> Enum.find(fn {name, _app, _version} -> name == package_name end)
-
-          case Version.compare(release["version"], current_version) do
-            :gt ->
-              %{package_name =>
-                %{installed_version: current_version,
-                  newest_version: release["version"],
-                  upgradable: true,
-                },
-              }
-
-            :eq ->
-              %{package_name =>
-                %{installed_version: current_version,
-                  newest_version: current_version,
-                  upgradable: false,
-                },
-              }
-
-            :lt ->
-              :lt
-          end
-      end
-    end
+  def http_get_package_from_hex(package_name) do
+    HTTPoison.get!("#{@hex_api_endpoint}/packages/#{package_name}")
   end
+
+
+  def current_version_in_use(package_name, path_to_mix_lock) do
+    # get current version of a package
+    {_name, _app, current_version} =
+      path_to_mix_lock
+      |> flattened_deps()
+      |> Enum.find(fn {name, _app, _version} -> name == package_name end)
+
+    current_version
+  end
+
 
   @doc """
   Takes all Hex packages from the lock and returns them
   as `{name, app, version}` tuples.
   """
-  @spec flattened_deps() :: [{String.t, String.t, String.t}]
-  def flattened_deps do
-    {lock, _} = Code.eval_file("../../demo_app/mix.lock")
+  @spec flattened_deps(String.t) :: [{String.t, String.t, String.t}]
+  def flattened_deps(path_to_mix_lock) do
+    {lock, _} = Code.eval_file(path_to_mix_lock)  # "../../phoenix-demo-app/mix.lock"
     Hex.Mix.from_lock(lock)  # [{"hackney", "hackney", "1.6.6"}, ...]
   end
+
+
+  def compare_versions(nil, _version), do: raise "no such release"
+  def compare_versions(release, version) do
+    Version.compare(release["version"], version)
+  end
+
+  def to_payload(:gt, package_name, release, version) do
+    %{package_name =>
+      %{installed_version: version,
+        newest_version: release["version"],
+        upgradable: true,
+      },
+    }
+  end
+
+  def to_payload(:eq, package_name, release, version) do
+    %{package_name =>
+      %{installed_version: version,
+        newest_version: version,
+        upgradable: false,
+      },
+    }
+  end
+
+  def to_payload(:lt, _package_name, _release, _version) do
+    raise "not implemented"
+  end
+
 end

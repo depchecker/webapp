@@ -8,7 +8,7 @@ defmodule DepChecker.Router do
   plug :dispatch
 
   get "/" do
-    payload = DepChecker.grab_deps() |> Msgpax.pack!()
+    payload = DepChecker.perform() |> Msgpax.pack!()
     send_resp(conn, 200, payload)
   end
 

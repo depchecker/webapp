@@ -16,7 +16,7 @@ defmodule DepCheckerTest do
         # },
       }
 
-    reality = DepChecker.grab_deps
+    reality = DepChecker.perform()
 
     assert expectation == reality
   end
