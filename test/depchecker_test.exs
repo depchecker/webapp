@@ -16,7 +16,7 @@ defmodule DepCheckerTest do
         # },
       }
 
-    reality = DepChecker.perform()
+    reality = DepChecker.perform("phoenix", "../../phoenix-demo-app/mix.lock")
 
     assert expectation == reality
   end

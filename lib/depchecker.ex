@@ -7,11 +7,7 @@ defmodule DepChecker do
 
   @doc """
   """
-  def perform do
-    package_name = "phoenix"
-    project_name = "phoenix-demo-app"
-    path_to_mix_lock = "../../#{project_name}/mix.lock"
-
+  def perform(package_name, path_to_mix_lock) do
     %{body: body, status_code: 200} = http_get_package_from_hex(package_name)
 
     {:ok, package} = Poison.decode(body)
@@ -68,7 +64,7 @@ defmodule DepChecker do
     }
   end
 
-  def to_payload(:eq, package_name, release, version) do
+  def to_payload(:eq, package_name, _release, version) do
     %{package_name =>
       %{installed_version: version,
         newest_version: version,

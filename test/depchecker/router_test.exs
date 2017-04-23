@@ -5,8 +5,15 @@ defmodule DepChecker.RouterTest do
   @opts DepChecker.Router.init([])
 
   test "calling the endpoint" do
+    # POST params
+    params = %{
+      package_name: "phoenix",
+      path_to_mix_lock: "../../phoenix-demo-app/mix.lock",
+    }
+
     # Create a test connection
-    conn = conn(:get, "/")
+    conn = conn(:post, "/", params)
+    |> put_req_header("content-type", "application/json")
 
     # Invoke the plug
     conn = DepChecker.Router.call(conn, @opts)
