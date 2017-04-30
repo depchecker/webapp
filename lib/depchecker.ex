@@ -12,7 +12,19 @@ defmodule DepChecker do
 
     {:ok, package} = Poison.decode(body)
 
-    version = current_version_in_use(package_name, path_to_mix_lock)
+    mix_lock =
+      case String.starts_with?(path_to_mix_lock, "http") do
+        true ->
+          http_get_and_parse_mix_lock(path_to_mix_lock)
+
+        false ->
+          {lock, _} = Code.eval_file(path_to_mix_lock)
+          lock
+      end
+
+    {_name, _app, version} =
+      from_lock(mix_lock)
+      |> Enum.find(fn {name, _app, _version} -> name == package_name end)
 
     latest_release = package["releases"] |> List.first()
 
@@ -28,25 +40,24 @@ defmodule DepChecker do
   end
 
 
-  def current_version_in_use(package_name, path_to_mix_lock) do
-    # get current version of a package
-    {_name, _app, current_version} =
-      path_to_mix_lock
-      |> flattened_deps()
-      |> Enum.find(fn {name, _app, _version} -> name == package_name end)
+  def http_get_and_parse_mix_lock(uri) do
+    case HTTPoison.get(uri) do
+      {:ok, %{body: lock_str, status_code: 200}} ->
+        {lock, _} = Code.eval_string(lock_str)
+        lock
 
-    current_version
+      otherwise -> otherwise
+    end
   end
-
 
   @doc """
   Takes all Hex packages from the lock and returns them
   as `{name, app, version}` tuples.
+  For example: [{"hackney", "hackney", "1.6.6"}, ...]
   """
-  @spec flattened_deps(String.t) :: [{String.t, String.t, String.t}]
-  def flattened_deps(path_to_mix_lock) do
-    {lock, _} = Code.eval_file(path_to_mix_lock)  # "../../phoenix-demo-app/mix.lock"
-    Hex.Mix.from_lock(lock)  # [{"hackney", "hackney", "1.6.6"}, ...]
+  @spec from_lock(String.t) :: [{String.t, String.t, String.t}]
+  def from_lock(lock) do
+    Hex.Mix.from_lock(lock)
   end
 
 

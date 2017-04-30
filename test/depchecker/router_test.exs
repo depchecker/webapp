@@ -23,4 +23,24 @@ defmodule DepChecker.RouterTest do
     assert conn.status == 200
     assert conn.resp_body != ""
   end
+
+  test "calling the endpoint with a remote mix.lock" do
+    # POST params
+    params = %{
+      package_name: "phoenix",
+      path_to_mix_lock: "https://raw.githubusercontent.com/simonewebdesign/phoenix-demo-app/master/mix.lock",
+    }
+
+    # Create a test connection
+    conn = conn(:post, "/", params)
+    |> put_req_header("content-type", "application/json")
+
+    # Invoke the plug
+    conn = DepChecker.Router.call(conn, @opts)
+
+    # Assert the response and status
+    assert conn.state == :sent
+    assert conn.status == 200
+    assert conn.resp_body != ""
+  end
 end
